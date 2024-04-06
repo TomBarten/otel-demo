@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using NumberService;
+using NumberService.Telemetry.Diagnostics;
+using NumberService.Telemetry.Processors;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;

@@ -1,15 +1,11 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using NumberService.Telemetry.Diagnostics;
+using NumberService.Telemetry.Logging;
 
 namespace NumberService;
 
-internal partial class NumberProviderLogs
-{
-    [LoggerMessage(LogLevel.Information, Message = "Providing number: \"{number}\"")]
-    public static partial void LogNumberProvided(ILogger<NumberProvider> logger, int number);
-}
-
-public sealed class NumberProvider
+internal sealed class NumberProvider
 {
     private readonly ILogger<NumberProvider> _logger;
     private readonly DiagnosticConfig _diagnosticConfig;
@@ -28,7 +24,7 @@ public sealed class NumberProvider
         
         activity?.SetTag(DiagnosticNames.AmountOfNumbers, amount);
 
-        ValidateAmountInput(ref amount);
+        var validationFlag = ValidateAmountInput(ref amount);
         
         using var loggingScope = _logger.BeginScope(new Dictionary<string, object>
         {
@@ -37,10 +33,10 @@ public sealed class NumberProvider
         
         _logger.LogInformation("Providing \"{amount}\" number(s)", amount);
 
-        if (amount <= 0)
+        if (!validationFlag)
         {
             yield return lessThanZeroNumber;
-            NumberProviderLogs.LogNumberProvided(_logger, lessThanZeroNumber);
+            NumberProviderLogging.LogNumberProvided(_logger, lessThanZeroNumber);
             
             yield break;
         }
@@ -50,22 +46,24 @@ public sealed class NumberProvider
         for (var i = 1; i <= amount; i++)
         {
             yield return i;
-            NumberProviderLogs.LogNumberProvided(_logger, i);
+            NumberProviderLogging.LogNumberProvided(_logger, i);
         }
     }
 
-    private void ValidateAmountInput(ref int amount)
+    private bool ValidateAmountInput(ref int amount)
     {
         if (amount > 0)
         {
             _logger.LogDebug("Amount is greater than 0");
-            return;
+            return true;
         }
         
         Activity.Current?.SetTag(DiagnosticNames.AmountIsLessThanOne, true);
 
-        _logger.LogDebug("Amount is less than or equal to 0, overwriting value to 0");
+        _logger.LogDebug("Amount is less than or equal to 0, overwriting value to 1");
             
-        amount = 0;
+        amount = 1;
+
+        return false;
     }
 }

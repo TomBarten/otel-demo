@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NumberService", "NumberService\NumberService.csproj", "{9471C065-16D6-424A-A416-6BA7D5B4A1FF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NumberService.ConsoleApp", "NumberService.ConsoleApp\NumberService.ConsoleApp.csproj", "{9471C065-16D6-424A-A416-6BA7D5B4A1FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NumberService.Api", "NumberService.Api\NumberService.Api.csproj", "{4EA7BA9E-F5CA-40B4-AC6A-0BAFD70D6F6E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +14,9 @@ Global
 		{9471C065-16D6-424A-A416-6BA7D5B4A1FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9471C065-16D6-424A-A416-6BA7D5B4A1FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9471C065-16D6-424A-A416-6BA7D5B4A1FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EA7BA9E-F5CA-40B4-AC6A-0BAFD70D6F6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EA7BA9E-F5CA-40B4-AC6A-0BAFD70D6F6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EA7BA9E-F5CA-40B4-AC6A-0BAFD70D6F6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EA7BA9E-F5CA-40B4-AC6A-0BAFD70D6F6E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
