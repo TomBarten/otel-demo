@@ -18,7 +18,7 @@ internal sealed class NumberProvider
     
     public IEnumerable<int> GetNumbers(int amount)
     {
-        const int lessThanZeroNumber = -1;
+        const int lessThanOneAmountNumber = -1;
         
         using var activity = _diagnosticConfig.Source.StartActivity();
         
@@ -35,8 +35,8 @@ internal sealed class NumberProvider
 
         if (!validationFlag)
         {
-            yield return lessThanZeroNumber;
-            NumberProviderLogging.LogNumberProvided(_logger, lessThanZeroNumber);
+            yield return lessThanOneAmountNumber;
+            NumberProviderLogging.LogNumberProvided(_logger, lessThanOneAmountNumber);
             
             yield break;
         }
