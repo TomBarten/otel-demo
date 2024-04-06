@@ -32,7 +32,7 @@ public sealed class NumberProvider
         
         using var loggingScope = _logger.BeginScope(new Dictionary<string, object>
         {
-            ["amount"] = amount
+            [DiagnosticNames.AmountOfNumbers] = amount
         });
         
         _logger.LogInformation("Providing \"{amount}\" number(s)", amount);

@@ -54,9 +54,9 @@ foreach (var number in numberProvider.GetNumbers(int.MinValue))
     // Console.WriteLine(number);
 }
 
-foreach (var number in numberProvider.GetNumbers(10))
-{
-    // Console.WriteLine(number);
-}
+// foreach (var number in numberProvider.GetNumbers(10))
+// {
+//     // Console.WriteLine(number);
+// }
 
 tracerProvider.Dispose();
