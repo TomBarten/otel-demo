@@ -17,79 +17,79 @@ namespace FileLogs.Otel.Collector
         
         public IEnumerable<LogEntry> ParseFile(FileInfo fileInfo)
         {
-            using (var reader = new StreamReader(fileInfo.OpenRead()))
+            using var reader = new StreamReader(fileInfo.OpenRead());
+            
+            var logEntryBuffer = new StringBuilder();
+
+            string currentLine;
+            Match previousStartLogEntryMatch = null;
+            Match currentStartLogEntryMatch = null;
+
+            while ((currentLine = reader.ReadLine()) != null)
             {
-                var logEntryBuffer = new StringBuilder();
+                var logLineStartMatch = _config.LogLineStartRegex.Match(currentLine);
 
-                string currentLine;
-                Match previousStartLogEntryMatch = null;
-                Match currentStartLogEntryMatch = null;
-
-                while ((currentLine = reader.ReadLine()) != null)
+                if (logLineStartMatch.Success)
                 {
-                    var logLineStartMatch = _config.LogLineStartRegex.Match(currentLine);
-
-                    if (logLineStartMatch.Success)
+                    if (currentStartLogEntryMatch != null)
                     {
-                        if (currentStartLogEntryMatch != null)
-                        {
-                            previousStartLogEntryMatch = currentStartLogEntryMatch;
-                        }
-
-                        currentStartLogEntryMatch = logLineStartMatch;
-
-                        if (logEntryBuffer.Length > 0)
-                        {
-                            if (previousStartLogEntryMatch == null)
-                            {
-                                throw new InvalidOperationException("Previous log entry prefix match is null");
-                            }
-
-                            yield return ConstructLogEntry(previousStartLogEntryMatch, logEntryBuffer.ToString());
-                            
-                            logEntryBuffer.Clear();
-                        }
+                        previousStartLogEntryMatch = currentStartLogEntryMatch;
                     }
 
-                    logEntryBuffer.AppendLine(currentLine);
+                    currentStartLogEntryMatch = logLineStartMatch;
+
+                    if (logEntryBuffer.Length > 0)
+                    {
+                        if (previousStartLogEntryMatch == null)
+                        {
+                            throw new InvalidOperationException("Previous log entry prefix match is null");
+                        }
+
+                        yield return ConstructLogEntry(previousStartLogEntryMatch, logEntryBuffer.ToString());
+                            
+                        logEntryBuffer.Clear();
+                    }
                 }
 
-                if (logEntryBuffer.Length <= 0)
-                {
-                    yield break;
-                }
-                
-                if (currentStartLogEntryMatch == null)
-                {
-                    throw new InvalidOperationException("Remaining log entry in the buffer without a prefix match");
-                }
-
-                yield return ConstructLogEntry(currentStartLogEntryMatch, logEntryBuffer.ToString());
-
-                logEntryBuffer.Clear();
+                logEntryBuffer.AppendLine(currentLine);
             }
+
+            if (logEntryBuffer.Length <= 0)
+            {
+                yield break;
+            }
+                
+            if (currentStartLogEntryMatch == null)
+            {
+                throw new InvalidOperationException("Remaining log entry in the buffer without a prefix match");
+            }
+
+            yield return ConstructLogEntry(currentStartLogEntryMatch, logEntryBuffer.ToString());
+
+            logEntryBuffer.Clear();
         }
         
         private LogEntry ConstructLogEntry(Match logLineStartMatch, string fullLog)
         {
             var logMessage = fullLog.Substring(logLineStartMatch.Length).Trim();
 
-            DateTimeOffset? logTimestamp = null;
+            var hasRetrievedLogType = TryRetrieveLogType(logLineStartMatch, fullLog, out var logType);
+            var hasRetrievedLogTimestamp = TryRetrieveLogTimestamp(logLineStartMatch, fullLog, out var logTimestamp);
 
-            if (!TryRetrieveLogType(logLineStartMatch, fullLog, out var logType) 
-                && !TryRetrieveLogTimestamp(logLineStartMatch, fullLog, out logTimestamp))
+            if (!hasRetrievedLogType && !hasRetrievedLogTimestamp)
             {
                 throw new InvalidOperationException("Unable to match log timestamp and type", 
                     new ArgumentException(fullLog, nameof(fullLog)));
             }
 
-            return new LogEntry(
-                timestamp: logTimestamp ?? throw new InvalidOperationException("Unable to match log timestamp", 
+            return new LogEntry
+            {
+                Timestamp = logTimestamp ?? throw new InvalidOperationException("Unable to match log timestamp",
                     new ArgumentException(fullLog, nameof(fullLog))),
-                logType: logType ?? throw new InvalidOperationException("Unable to match log type", 
+                LogLevel = logType ?? throw new InvalidOperationException("Unable to match log type",
                     new ArgumentException(fullLog, nameof(fullLog))),
-                message: logMessage
-            );
+                Message = logMessage
+            };
         }
 
         private bool TryRetrieveLogType(Match logLineStartMatch, string fullLog, out string logType)

@@ -1,30 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry;
+using OpenTelemetry.Logs;
 
 namespace FileLogs.Otel.Collector
 {
-    public sealed class LogEntryOtelParser
+    public sealed class LogEntryOtelWriter
     {
-        public async Task WriteLogEntries(IEnumerable<LogEntry> logEntries)
+        public void WriteLogEntries(IEnumerable<LogEntry> logEntries)
         {
+            using var logFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddOpenTelemetry(otelOptions =>
+                {
+                    // otelOptions.ParseStateValues = true;
+                    otelOptions.IncludeScopes = true;
+                    
+                    otelOptions
+                        .AddProcessor(new LogEntryTimestampProcessor())
+                        .AddConsoleExporter();
+                });
+            });
+
+            var logger = logFactory.CreateLogger<LogEntryOtelWriter>();
+            
             foreach (var kv in GroupLogEntriesByTimestamp(logEntries))
             {
-                await WriteLogs(kv.Value);
+                WriteLogs(logger, kv.Value);
             }   
         }
 
-        private async Task WriteLogs(IReadOnlyList<LogEntry> logEntries)
+        private static void WriteLogs(ILogger logger, IReadOnlyList<LogEntry> logEntries)
         {
             foreach (var logEntry in logEntries)
             {
+                // Scope is used to later overwrite the timestamp using the processor
+                using (logger.BeginScope(new Dictionary<string, object> 
+                       {
+                           { nameof(logEntry.Timestamp), logEntry.Timestamp },
+                       }))
+                {
+                    logger.Log(LogLevel.Critical, "{message}", logEntry.Message);
+                }
             }
         }
         
-        private IReadOnlyDictionary<DateTimeOffset, List<LogEntry>> GroupLogEntriesByTimestamp(IEnumerable<LogEntry> logEntries)
+        private static IReadOnlyDictionary<DateTimeOffset, List<LogEntry>> GroupLogEntriesByTimestamp(IEnumerable<LogEntry> logEntries)
         {
             var maxDelayBetweenRelatedLogs = TimeSpan.FromMinutes(5);
             
@@ -34,14 +57,10 @@ namespace FileLogs.Otel.Collector
 
             if (orderedEntries.Count <= 0)
             {
-                return new Dictionary<DateTimeOffset, List<LogEntry>>(0);
+                return ImmutableDictionary<DateTimeOffset, List<LogEntry>>.Empty;
             }
             
-            var initialCapacity = orderedEntries.Count % 2 == 0 
-                ? orderedEntries.Count / 2 
-                : (orderedEntries.Count + 1) / 2;
-            
-            var groupedEntries = new Dictionary<DateTimeOffset, List<LogEntry>>(initialCapacity);
+            var groupedEntries = new Dictionary<DateTimeOffset, List<LogEntry>>(3);
             
             DateTimeOffset? lastLogEntryTimestamp = null;
 
@@ -73,37 +92,38 @@ namespace FileLogs.Otel.Collector
                     
                     groupedEntries.Add(logEntryTimestamp, new List<LogEntry> { logEntry });
                     
+                    lastLogEntryTimestamp = logEntryTimestamp;
+                    
                     continue;
                 }
                 
                 var lastTimestamp = lastLogEntryTimestamp.Value;
-                    
-                groupedEntries.TryGetValue(lastTimestamp, out var groupedLogEntries);
 
-                if (groupedLogEntries == null)
+                if (!groupedEntries.TryGetValue(lastTimestamp, out var groupedLogEntries))
                 {
                     throw new InvalidOperationException(
-                        $"Retrieved grouped log entries are null under timestamp: {lastTimestamp}");
+                        $"There are no grouped entries under timestamp: {lastTimestamp}");
                 }
                     
                 groupedLogEntries.Add(logEntry);
-
+                
+                if (logEntryTimestamp == lastTimestamp)
+                {
+                    lastLogEntryTimestamp = logEntryTimestamp;
+                    continue;
+                }
+                
                 if (!groupedEntries.Remove(lastTimestamp))
                 {
                     throw new InvalidOperationException($"Failed to remove grouped log entries under timestamp {lastTimestamp}");
                 }
                 
                 groupedEntries.Add(logEntryTimestamp, groupedLogEntries);
-            }
-
-            if (initialCapacity <= groupedEntries.Count)
-            {
-                return groupedEntries;
+                
+                lastLogEntryTimestamp = logEntryTimestamp;
             }
             
-            var trimmedGroupedEntries = new Dictionary<DateTimeOffset, List<LogEntry>>(groupedEntries);
-
-            groupedEntries = trimmedGroupedEntries;
+            groupedEntries.TrimExcess();
 
             return groupedEntries;
         }
