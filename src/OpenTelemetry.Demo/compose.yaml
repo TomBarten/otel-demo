@@ -1,0 +1,15 @@
+﻿services:
+#  coffee.api:
+#    image: ${DOCKER_REGISTRY-}coffee.api
+#    build:
+#      context: .
+#      dockerfile: Coffee.Api/Dockerfile
+      
+  coffee.api.dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
+    container_name: coffee.api.dashboard
+    environment:
+      - DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true
+    ports:
+      - "4318:18888"
+      - "4317:18889"
