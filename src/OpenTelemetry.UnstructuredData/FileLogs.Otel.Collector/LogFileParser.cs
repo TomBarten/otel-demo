@@ -69,73 +69,15 @@ namespace FileLogs.Otel.Collector
                 logEntryBuffer.Clear();
             }
         }
-
+        
         private LogEntry ConstructLogEntry(Match logLineStartMatch, string fullLog)
         {
-            string logType = null;
-            DateTimeOffset? logTimestamp = null;
-            
             var logMessage = fullLog.Substring(logLineStartMatch.Length).Trim();
-            
-            if (!string.IsNullOrWhiteSpace(_config.LogLineStartTypeMatchingGroup))
-            {
-                logType = logLineStartMatch.Groups[_config.LogLineStartTypeMatchingGroup].Value;
-            }
 
-            if (!string.IsNullOrWhiteSpace(_config.LogLineStartTimestampMatchingGroup))
-            {
-                var logTimestampString = logLineStartMatch.Groups[_config.LogLineStartTimestampMatchingGroup].Value;
-                
-                if (DateTimeOffset.TryParse(logTimestampString, out var timestamp))
-                {
-                    logTimestamp = timestamp;
-                }
-            }
+            DateTimeOffset? logTimestamp = null;
 
-            if (logTimestamp == null && _config.LogLineTimestampRegex != null)
-            {
-                var timestampMatch = _config.LogLineTimestampRegex.Match(fullLog);
-                
-                if (timestampMatch.Success)
-                {
-                    string timestampString = null;
-                
-                    if (!string.IsNullOrWhiteSpace(_config.LogLineTimestampMatchingGroup))
-                    {
-                        timestampString = timestampMatch.Groups[_config.LogLineTimestampMatchingGroup].Value;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(timestampString))
-                    {
-                        timestampString = timestampMatch.Value;
-                    }
-                    
-                    if (DateTimeOffset.TryParse(timestampString, out var timestamp))
-                    {
-                        logTimestamp = timestamp;
-                    }
-                }
-            }
-
-            if (string.IsNullOrWhiteSpace(logType) && _config.LogLineTypeRegex != null)
-            {
-                var logTypeMatch = _config.LogLineTypeRegex.Match(fullLog);
-                
-                if (logTypeMatch.Success)
-                {
-                    if (!string.IsNullOrWhiteSpace(_config.LogLineTypeMatchingGroup))
-                    {
-                        logType = logTypeMatch.Groups[_config.LogLineTypeMatchingGroup].Value;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(logType))
-                    {
-                        logType = logTypeMatch.Value;
-                    }
-                }
-            }
-            
-            if (logTimestamp == null && string.IsNullOrWhiteSpace(logType))
+            if (!TryRetrieveLogType(logLineStartMatch, fullLog, out var logType) 
+                && !TryRetrieveLogTimestamp(logLineStartMatch, fullLog, out logTimestamp))
             {
                 throw new InvalidOperationException("Unable to match log timestamp and type", 
                     new ArgumentException(fullLog, nameof(fullLog)));
@@ -148,6 +90,86 @@ namespace FileLogs.Otel.Collector
                     new ArgumentException(fullLog, nameof(fullLog))),
                 message: logMessage
             );
+        }
+
+        private bool TryRetrieveLogType(Match logLineStartMatch, string fullLog, out string logType)
+        {
+            logType = null;
+            
+            if (!string.IsNullOrWhiteSpace(_config.LogLineStartTypeMatchingGroup))
+            {
+                logType = logLineStartMatch.Groups[_config.LogLineStartTypeMatchingGroup].Value;
+            }
+
+            if (!string.IsNullOrWhiteSpace(logType) || _config.LogLineTypeRegex == null)
+            {
+                return !string.IsNullOrWhiteSpace(logType);
+            }
+            
+            var logTypeMatch = _config.LogLineTypeRegex.Match(fullLog);
+
+            if (!logTypeMatch.Success)
+            {
+                return !string.IsNullOrWhiteSpace(logType);
+            }
+            
+            if (!string.IsNullOrWhiteSpace(_config.LogLineTypeMatchingGroup))
+            {
+                logType = logTypeMatch.Groups[_config.LogLineTypeMatchingGroup].Value;
+            }
+
+            if (string.IsNullOrWhiteSpace(logType))
+            {
+                logType = logTypeMatch.Value;
+            }
+            
+            return !string.IsNullOrWhiteSpace(logType);
+        }
+        
+        private bool TryRetrieveLogTimestamp(Match logLineStartMatch, string fullLog, out DateTimeOffset? logTimestamp)
+        {
+            logTimestamp = null;
+            
+            if (!string.IsNullOrWhiteSpace(_config.LogLineStartTimestampMatchingGroup))
+            {
+                var logTimestampString = logLineStartMatch.Groups[_config.LogLineStartTimestampMatchingGroup].Value;
+                
+                if (DateTimeOffset.TryParse(logTimestampString, out var logLineStartTimestamp))
+                {
+                    logTimestamp = logLineStartTimestamp;
+                }
+            }
+
+            if (logTimestamp != null || _config.LogLineTimestampRegex == null)
+            {
+                return logTimestamp != null;
+            }
+            
+            var timestampMatch = _config.LogLineTimestampRegex.Match(fullLog);
+
+            if (!timestampMatch.Success)
+            {
+                return logTimestamp != null;
+            }
+            
+            string timestampString = null;
+                
+            if (!string.IsNullOrWhiteSpace(_config.LogLineTimestampMatchingGroup))
+            {
+                timestampString = timestampMatch.Groups[_config.LogLineTimestampMatchingGroup].Value;
+            }
+
+            if (string.IsNullOrWhiteSpace(timestampString))
+            {
+                timestampString = timestampMatch.Value;
+            }
+                    
+            if (DateTimeOffset.TryParse(timestampString, out var logLineTimestamp))
+            {
+                logTimestamp = logLineTimestamp;
+            }
+
+            return logTimestamp != null;
         }
     }
 }
