@@ -1,0 +1,3 @@
+﻿receivers:
+  filelog:
+    include: ["/var/log/myapp/*.log"]
