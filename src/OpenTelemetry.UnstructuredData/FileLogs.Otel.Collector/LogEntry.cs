@@ -1,15 +1,20 @@
-﻿namespace FileLogs.Otel.Collector
+﻿using System;
+
+namespace FileLogs.Otel.Collector
 {
     public sealed class LogEntry
     {
-        public string LogEntryPrefix { get; }
+        public DateTimeOffset Timestamp { get; }
         
-        public string LogEntryMessage { get; }
+        public string LogType { get; }
+        
+        public string Message { get; }
 
-        public LogEntry(string logEntryPrefix, string fullLogLine)
+        public LogEntry(DateTimeOffset timestamp, string logType, string message)
         {
-            LogEntryPrefix = logEntryPrefix;
-            LogEntryMessage = fullLogLine.Substring(logEntryPrefix.Length).Trim();
+            Timestamp = timestamp;
+            LogType = logType;
+            Message = message;
         }
     }
 }

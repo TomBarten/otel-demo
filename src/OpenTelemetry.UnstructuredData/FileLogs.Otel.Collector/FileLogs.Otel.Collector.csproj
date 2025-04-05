@@ -72,8 +72,10 @@
         <Reference Include="System.Xml"/>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="LogConfiguration.cs" />
         <Compile Include="LogEntry.cs" />
         <Compile Include="LogEntryOtelParser.cs" />
+        <Compile Include="LogFileParser.cs" />
         <Compile Include="Program.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
     </ItemGroup>

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -11,9 +9,25 @@ namespace FileLogs.Otel.Collector
     {
         public static void Main(string[] args)
         {
-
             const string informationLogFileName = "Log-information.log";
-            var logLineStartRegex = new Regex(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \w+");
+            
+            var logLineStartRegex = new Regex(@"^(?<LogTimestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (?<LogType>\w+)");
+            const string logLineStartTypeMatchingGroup = "LogType";
+            const string logLineStartTimestampMatchingGroup = "LogTimestamp";
+            
+            var logLineTimestampRegex = new Regex(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}");
+            var logLineTypeRegex = new Regex(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} (?<LogType>\w+)");
+            const string logLineTypeMatchingGroup = "LogType";
+
+            var config = new LogConfiguration
+            (
+                logLineStartRegex: logLineStartRegex,
+                logLineStartTypeMatchingGroup: logLineStartTypeMatchingGroup,
+                logLineStartTimestampMatchingGroup: logLineStartTimestampMatchingGroup,
+                logLineTimestampRegex: logLineTimestampRegex,
+                logLineTypeRegex: logLineTypeRegex,
+                logLineTypeMatchingGroup: logLineTypeMatchingGroup
+            );
             
             var informationLogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, informationLogFileName);
 
@@ -24,58 +38,11 @@ namespace FileLogs.Otel.Collector
 
             var informationLogFile = new FileInfo(informationLogFilePath);
             
-            using (var reader = new StreamReader(informationLogFile.OpenRead()))
+            var logFileParser = new LogFileParser(config);
+            
+            foreach (var logEntry in logFileParser.ParseFile(informationLogFile))
             {
-                var logEntryBuffer = new StringBuilder();
-                
-                string currentLine;
-                Match previousStartLogEntryMatch = null;
-                Match currentStartLogEntryMatch = null;
-
-                var logEntries = new List<LogEntry>();
-                
-                while ((currentLine = reader.ReadLine()) != null)
-                {
-                    var logLineStartMatch = logLineStartRegex.Match(currentLine);
-                    
-                    if (logLineStartMatch.Success)
-                    {
-                        if (currentStartLogEntryMatch != null)
-                        {
-                            previousStartLogEntryMatch = currentStartLogEntryMatch;
-                        }
-
-                        currentStartLogEntryMatch = logLineStartMatch;
-
-                        if (logEntryBuffer.Length > 0)
-                        {
-                            if (previousStartLogEntryMatch == null)
-                            {
-                                throw new InvalidOperationException("Previous log entry prefix match is null");
-                            }
-                            
-                            logEntries.Add(new LogEntry(previousStartLogEntryMatch.Value, logEntryBuffer.ToString()));
-                            logEntryBuffer.Clear();
-                        }
-                    }
-
-                    logEntryBuffer.AppendLine(currentLine);
-                }
-
-                if (logEntryBuffer.Length > 0)
-                {
-                    if (currentStartLogEntryMatch == null)
-                    {
-                        throw new InvalidOperationException("Remaining log entry in the buffer without a prefix match");
-                    }
-                    
-                    logEntries.Add(new LogEntry(currentStartLogEntryMatch.Value, logEntryBuffer.ToString()));
-                }
-
-                foreach (var logEntry in logEntries)
-                {
-                    Console.WriteLine(JsonSerializer.Serialize(logEntry));
-                }
+                Console.WriteLine(JsonSerializer.Serialize(logEntry));
             }
         }
     }
