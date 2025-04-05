@@ -1,5 +1,14 @@
 ﻿services:
-  otel-collector:
+    file.telemetry.dashboard:
+        image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
+        container_name: file.telemetry.dashboard
+        environment:
+            - DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true
+        ports:
+#            - "4320:18888" # HTTP
+            - "4319:18889" # gRPC
+
+    otel-collector:
       image: otel/opentelemetry-collector-contrib:latest
       container_name: otel-collector
       ports:
