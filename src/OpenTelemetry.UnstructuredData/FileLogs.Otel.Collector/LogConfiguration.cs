@@ -12,22 +12,29 @@ namespace FileLogs.Otel.Collector
         
         public Regex LogLineTimestampRegex { get; }
         
+        public string LogLineTimestampMatchingGroup { get; }
+        
         public Regex LogLineTypeRegex { get; }
         
         public string LogLineTypeMatchingGroup { get; }
-        
+
         public LogConfiguration(
             Regex logLineStartRegex,
             string logLineStartTypeMatchingGroup,
             string logLineStartTimestampMatchingGroup,
             Regex logLineTimestampRegex,
+            string logLineTimestampMatchingGroup,
             Regex logLineTypeRegex,
             string logLineTypeMatchingGroup)
         {
             LogLineStartRegex = logLineStartRegex;
+            
             LogLineStartTypeMatchingGroup = logLineStartTypeMatchingGroup;
             LogLineStartTimestampMatchingGroup = logLineStartTimestampMatchingGroup;
+            
             LogLineTimestampRegex = logLineTimestampRegex;
+            LogLineTimestampMatchingGroup = logLineTimestampMatchingGroup;
+            
             LogLineTypeRegex = logLineTypeRegex;
             LogLineTypeMatchingGroup = logLineTypeMatchingGroup;
         }

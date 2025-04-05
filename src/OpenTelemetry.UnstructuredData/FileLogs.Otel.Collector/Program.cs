@@ -12,10 +12,11 @@ namespace FileLogs.Otel.Collector
             const string informationLogFileName = "Log-information.log";
             
             var logLineStartRegex = new Regex(@"^(?<LogTimestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (?<LogType>\w+)");
-            const string logLineStartTypeMatchingGroup = "LogType";
-            const string logLineStartTimestampMatchingGroup = "LogTimestamp";
+            const string logLineStartTypeMatchingGroup = "";
+            const string logLineStartTimestampMatchingGroup = "";
             
             var logLineTimestampRegex = new Regex(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}");
+            const string logLineTimestampMatchingGroup = "LogTimestamp";
             var logLineTypeRegex = new Regex(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} (?<LogType>\w+)");
             const string logLineTypeMatchingGroup = "LogType";
 
@@ -25,6 +26,7 @@ namespace FileLogs.Otel.Collector
                 logLineStartTypeMatchingGroup: logLineStartTypeMatchingGroup,
                 logLineStartTimestampMatchingGroup: logLineStartTimestampMatchingGroup,
                 logLineTimestampRegex: logLineTimestampRegex,
+                logLineTimestampMatchingGroup: logLineTimestampMatchingGroup,
                 logLineTypeRegex: logLineTypeRegex,
                 logLineTypeMatchingGroup: logLineTypeMatchingGroup
             );

@@ -95,10 +95,25 @@ namespace FileLogs.Otel.Collector
             if (logTimestamp == null && _config.LogLineTimestampRegex != null)
             {
                 var timestampMatch = _config.LogLineTimestampRegex.Match(fullLog);
-
-                if (timestampMatch.Success && DateTimeOffset.TryParse(timestampMatch.Value, out var timestamp))
+                
+                if (timestampMatch.Success)
                 {
-                    logTimestamp = timestamp;
+                    string timestampString = null;
+                
+                    if (!string.IsNullOrWhiteSpace(_config.LogLineTimestampMatchingGroup))
+                    {
+                        timestampString = timestampMatch.Groups[_config.LogLineTimestampMatchingGroup].Value;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(timestampString))
+                    {
+                        timestampString = timestampMatch.Value;
+                    }
+                    
+                    if (DateTimeOffset.TryParse(timestampString, out var timestamp))
+                    {
+                        logTimestamp = timestamp;
+                    }
                 }
             }
 
@@ -108,7 +123,15 @@ namespace FileLogs.Otel.Collector
                 
                 if (logTypeMatch.Success)
                 {
-                    logType = logTypeMatch.Value;
+                    if (!string.IsNullOrWhiteSpace(_config.LogLineTypeMatchingGroup))
+                    {
+                        logType = logTypeMatch.Groups[_config.LogLineTypeMatchingGroup].Value;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(logType))
+                    {
+                        logType = logTypeMatch.Value;
+                    }
                 }
             }
             
