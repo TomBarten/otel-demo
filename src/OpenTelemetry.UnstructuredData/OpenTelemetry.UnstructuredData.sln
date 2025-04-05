@@ -1,6 +1,6 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileLogs.Otel.Collector", "FileLogs.Otel.Collector\FileLogs.Otel.Collector.csproj", "{E9E04DDA-62AC-43A1-9DF9-423681212D9F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileLogs.Otel.Collector", "FileLogs.Otel.Collector\FileLogs.Otel.Collector.csproj", "{E9E04DDA-62AC-43A1-9DF9-423681212D9F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
