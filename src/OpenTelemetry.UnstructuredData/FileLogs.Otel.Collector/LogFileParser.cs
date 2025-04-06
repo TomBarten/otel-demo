@@ -21,9 +21,9 @@ public sealed class LogFileParser
             
         var logEntryBuffer = new StringBuilder();
 
-        string currentLine;
-        Match previousStartLogEntryMatch = null;
-        Match currentStartLogEntryMatch = null;
+        string? currentLine;
+        Match? previousStartLogEntryMatch = null;
+        Match? currentStartLogEntryMatch = null;
 
         while ((currentLine = reader.ReadLine()) != null)
         {
@@ -92,7 +92,7 @@ public sealed class LogFileParser
         };
     }
 
-    private bool TryRetrieveLogType(Match logLineStartMatch, string fullLog, out string logType)
+    private bool TryRetrieveLogType(Match logLineStartMatch, string fullLog, out string? logType)
     {
         logType = null;
             
@@ -152,7 +152,7 @@ public sealed class LogFileParser
             return logTimestamp != null;
         }
             
-        string timestampString = null;
+        string? timestampString = null;
                 
         if (!string.IsNullOrWhiteSpace(_config.LogLineTimestampMatchingGroup))
         {
