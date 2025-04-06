@@ -6,7 +6,24 @@
         
 processors:
   batch:
-    
+  resource:
+    attributes:
+      - key: telemetry.sdk.name
+        action: delete
+      - key: telemetry.sdk.language
+        action: delete
+      - key: telemetry.sdk.version
+        action: delete
+      - key: service.name
+        action: delete
+        
+  attributes:
+    actions:
+      - key: LogRecord.CategoryName
+        action: delete
+      - key: LogRecord.ScopeValues
+        action: delete
+        
 exporters:
   otlp:
     protocols:
@@ -17,9 +34,9 @@ service:
   pipelines:
     logs:
       receivers: [otlp]
-      processors: [batch]
+      processors: [batch, resource, attributes]
       exporters: [otlp]
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: [batch, resource, attributes]
       exporters: [otlp]

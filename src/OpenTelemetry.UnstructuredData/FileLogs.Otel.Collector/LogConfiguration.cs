@@ -1,42 +1,35 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
-namespace FileLogs.Otel.Collector
+namespace FileLogs.Otel.Collector;
+
+public sealed class LogConfiguration
 {
-    public sealed class LogConfiguration
-    {
-        public Regex LogLineStartRegex { get; }
+    public const string DirectoriesSectionName = "directories";
+    
+    [JsonPropertyName("files")]
+    public required IReadOnlyList<FileInfo> Files { get; init; }
+    
+    [JsonPropertyName("logLineStartRegex")]
+    public required Regex LogLineStartRegex { get; init; }
+    
+    [JsonPropertyName("logLineStartRegex")]
+    public string? LogLineStartTypeMatchingGroup { get; init; }
         
-        public string LogLineStartTypeMatchingGroup { get; }
+    [JsonPropertyName("logLineStartTimestampMatchingGroup")]
+    public string? LogLineStartTimestampMatchingGroup { get; init; }
         
-        public string LogLineStartTimestampMatchingGroup { get; }
-        
-        public Regex LogLineTimestampRegex { get; }
-        
-        public string LogLineTimestampMatchingGroup { get; }
-        
-        public Regex LogLineTypeRegex { get; }
-        
-        public string LogLineTypeMatchingGroup { get; }
+    [JsonPropertyName("logLineTimestampRegex")]
+    public Regex? LogLineTimestampRegex { get; init; }
 
-        public LogConfiguration(
-            Regex logLineStartRegex,
-            string logLineStartTypeMatchingGroup,
-            string logLineStartTimestampMatchingGroup,
-            Regex logLineTimestampRegex,
-            string logLineTimestampMatchingGroup,
-            Regex logLineTypeRegex,
-            string logLineTypeMatchingGroup)
-        {
-            LogLineStartRegex = logLineStartRegex;
-            
-            LogLineStartTypeMatchingGroup = logLineStartTypeMatchingGroup;
-            LogLineStartTimestampMatchingGroup = logLineStartTimestampMatchingGroup;
-            
-            LogLineTimestampRegex = logLineTimestampRegex;
-            LogLineTimestampMatchingGroup = logLineTimestampMatchingGroup;
-            
-            LogLineTypeRegex = logLineTypeRegex;
-            LogLineTypeMatchingGroup = logLineTypeMatchingGroup;
-        }
-    }
+    [JsonPropertyName("logLineTimestampMatchingGroup")]
+    public string? LogLineTimestampMatchingGroup { get; init; }
+        
+    [JsonPropertyName("logLineTypeRegex")]
+    public Regex? LogLineTypeRegex { get; init; }
+        
+    [JsonPropertyName("logLineTypeMatchingGroup")]
+    public string? LogLineTypeMatchingGroup { get; init; }
 }
